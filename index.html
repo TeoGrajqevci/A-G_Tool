@@ -1,0 +1,513 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="icon" type="image/svg+xml" href="/vite.svg" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Anti-Gel Tool</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+    <style>
+      body {
+        margin: 0;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        height: 100vh;
+        background-color: #ffffff;
+        overflow: hidden;
+        font-family: 'Inter', sans-serif;
+      }
+      canvas {
+        border: 1px solid #eeeeee;
+        /* border-radius: 8px; */
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+      }
+      
+      #gui-panel {
+        position: fixed;
+        top: 0;
+        right: 0;
+        width: 200px;
+        height: 75vh;
+        border-radius: 20px;
+        background-color: rgba(255, 255, 255, 0.98);
+        border: #000000 2px solid;
+        padding: 12px;
+        margin: 10px;
+        box-sizing: border-box;
+        box-shadow: -2px 0 15px rgba(0, 0, 0, 0.05);
+        overflow-y: auto;
+        /* Animation améliorée pour une transition plus fluide */
+        transition: transform 0.4s cubic-bezier(0.25, 1, 0.5, 1), 
+                    opacity 0.3s ease, 
+                    visibility 0.3s ease;
+        z-index: 999;
+      }
+      
+      #gui-panel.hidden {
+        transform: translateX(220px);
+        visibility: hidden;
+      }
+      
+      #toggle-gui {
+        position: fixed;
+        top: 20px;
+        right: 220px;
+        width: 20px;
+        height: 20px;
+        background-color: #000000;
+        color: #ffffff;
+        border: 2px solid #000000;
+        border-radius: 8px;
+        cursor: pointer;
+        box-shadow: 0 0 10px rgba(0, 0, 0, 0.2);
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        font-size: 18px;
+        z-index: 1000;
+        /* Animation améliorée pour le bouton */
+        transition: right 0.4s cubic-bezier(0.25, 1, 0.5, 1), 
+                    background-color 0.3s ease,
+                    transform 0.3s ease;
+      }
+      
+      #toggle-gui:hover {
+        transform: scale(1.05);
+      }
+      
+      .control-group {
+        margin-bottom: 0px;
+        background-color: #ffffff00;
+        padding: 0px;
+      }
+      
+      .control-group label {
+        display: block;
+        margin-bottom: 4px;
+        font-weight: 500;
+        font-size: 11px;
+        color: #000000;
+      }
+      
+      .control-group input[type="range"] {
+        width: 100%;
+        margin-bottom: 4px;
+        -webkit-appearance: none;
+        height: 3px;
+        background: #e0e0e0;
+        border-radius: 2px;
+        outline: none;
+      }
+      
+      .control-group input[type="range"]::-webkit-slider-thumb {
+        -webkit-appearance: none;
+        width: 12px;
+        height: 12px;
+        border-radius: 50%;
+        background: #000000;
+        cursor: pointer;
+        transition: background 0.2s;
+      }
+      
+      .control-group input[type="range"]::-webkit-slider-thumb:hover {
+        background: #ffffff;
+        border: #000000 1px solid;
+      }
+      
+      .control-group input[type="number"],
+      .control-group select {
+        width: 100%;
+        padding: 6px;
+        border: 1px solid #e0e0e0;
+        border-radius: 4px;
+        background-color: white;
+        font-family: inherit;
+        font-size: 11px;
+        margin-bottom: 4px;
+        transition: border-color 0.2s;
+        outline: none;
+      }
+      
+      .control-group input[type="number"]:focus,
+      .control-group select:focus {
+        border-color: #000000;
+      }
+      
+      .value-display {
+        font-size: 10px;
+        font-weight: 1000;
+        color: #000000;
+        display: block;
+        text-align: right;
+        margin-top: 1px;
+      }
+      
+      h2 {
+        font-size: 14px;
+        font-weight: 500;
+        margin-top: 0;
+        margin-bottom: 10px;
+        color: #000000;
+        padding-bottom: 0px;
+      }
+
+      .random-control {
+        display: flex;
+        align-items: center;
+        margin-bottom: 5px;
+      }
+      
+      .random-control input[type="checkbox"] {
+        margin-right: 5px;
+      }
+      
+      .range-inputs {
+        display: flex;
+        gap: 5px;
+        margin-bottom: 8px;
+      }
+      
+      .range-inputs input {
+        width: 45%;
+        padding: 3px;
+        font-size: 10px;
+        border: 1px solid #e0e0e0;
+        border-radius: 3px;
+      }
+      
+      .randomize-btn {
+        width: 100%;
+        padding: 8px;
+        display: none;
+        background-color: #000000;
+        color: white;
+        border: none;
+        border-radius: 4px;
+        cursor: pointer;
+        font-family: inherit;
+        font-size: 12px;
+        margin-top: 10px;
+        margin-bottom: 16px;
+        transition: background-color 0.2s, transform 0.1s;
+      }
+      
+      .randomize-btn:hover {
+        background-color: #333333;
+        transform: translateY(-1px);
+      }
+      
+      .randomize-btn:active {
+        transform: translateY(1px);
+      }
+      
+      .section-title {
+        font-size: 12px;
+        font-weight: 600;
+        margin-top: 15px;
+        margin-bottom: 8px;
+        color: #000000;
+        display: block;
+      }
+
+      .color-palette {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 5px;
+        margin-bottom: 10px;
+      }
+      
+      .color-swatch {
+        width: 20px;
+        height: 20px;
+        border-radius: 4px;
+        border: 1px solid #e0e0e0;
+        cursor: pointer;
+        position: relative;
+      }
+      
+      .color-swatch.selected {
+        box-shadow: 0 0 0 2px #000000;
+      }
+      
+      .color-swatch .delete-color {
+        position: absolute;
+        top: -5px;
+        right: -5px;
+        width: 12px;
+        height: 12px;
+        background: #ff0000;
+        color: white;
+        border-radius: 50%;
+        font-size: 8px;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        opacity: 0;
+        transition: opacity 0.2s;
+      }
+      
+      .color-swatch:hover .delete-color {
+        opacity: 1;
+      }
+      
+      .add-color {
+        width: 20px;
+        height: 20px;
+        background-color: #f0f0f0;
+        border-radius: 4px;
+        border: 1px dashed #999;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        font-size: 14px;
+        cursor: pointer;
+      }
+      
+      .color-row {
+        display: flex;
+        gap: 5px;
+        align-items: center;
+        margin-bottom: 5px;
+      }
+      
+      .color-label {
+        width: 80px;
+        font-size: 11px;
+      }
+      
+      .color-picker {
+        width: 30px;
+        height: 30px;
+        padding: 0;
+        border: none;
+        border-radius: 4px;
+        background: none;
+        cursor: pointer;
+      }
+    </style>
+  </head>
+  <body>
+    <canvas id="canvas"></canvas>
+    
+    <!-- Déplacer le bouton à l'extérieur du panneau GUI -->
+    <button id="toggle-gui">≡</button>
+    
+    <div id="gui-panel">
+      <div class="control-group">
+        <label for="num-particles">Nmb of Particles</label>
+        <input type="range" id="num-particles" min="10" max="50000" step="100" value="20000">
+        <span id="num-particles-value" class="value-display">20000</span>
+      </div>
+      
+      <div class="control-group">
+        <label for="particle-size">Size</label>
+        <input type="range" id="particle-size" min="0.5" max="10" step="0.5" value="2">
+        <span id="particle-size-value" class="value-display">2</span>
+      </div>
+      
+      <div class="control-group">
+        <label for="particle-shape">Shape</label>
+        <select id="particle-shape">
+          <option value="circle">Circle</option>
+          <option value="rect">Rectangle</option>
+        </select>
+      </div>
+      
+      <div class="control-group">
+        <label for="damping">Damping</label>
+        <input type="range" id="damping" min="0.5" max="0.99" step="0.01" value="0.95">
+        <span id="damping-value" class="value-display">0.95</span>
+      </div>
+      
+      <div class="control-group">
+        <label for="friction">Friction</label>
+        <input type="range" id="friction" min="0" max="0.5" step="0.005" value="0.06">
+        <span id="friction-value" class="value-display">0.06</span>
+      </div>
+      
+      <div class="control-group">
+        <label for="force-scale">Attraction Force</label>
+        <input type="range" id="force-scale" min="0.01" max="0.5" step="0.01" value="0.1">
+        <span id="force-scale-value" class="value-display">0.1</span>
+      </div>
+      
+      <div class="control-group">
+        <label for="jitter-scale">Jitter</label>
+        <input type="range" id="jitter-scale" min="0" max="1" step="0.05" value="0">
+        <span id="jitter-scale-value" class="value-display">0</span>
+      </div>
+      
+      <div class="control-group">
+        <label for="distance-scale">Distance Scale</label>
+        <input type="range" id="distance-scale" min="0.2" max="2" step="0.05" value="1">
+        <span id="distance-scale-value" class="value-display">1</span>
+      </div>
+      
+      <!-- Contrôles pour le texte invisible et la taille de police -->
+      <div class="control-group">
+        <label for="text-input">Text</label>
+        <textarea id="text-input" rows="2" style="width: 100%; resize: vertical;"></textarea>
+      </div>
+      <div class="control-group">
+        <label for="font-size">Font Size</label>
+        <input type="range" id="font-size" min="50" max="500" step="1" value="200">
+        <span id="font-size-value" class="value-display">200</span>
+      </div>
+      <div class="control-group">
+        <label for="text-repulsion">Text Force</label>
+        <input type="range" id="text-repulsion" min="0" max="1" step="0.01" value="0.2">
+        <span id="text-repulsion-value" class="value-display">0.2</span>
+      </div>
+      <div class="control-group">
+        <div class="random-control">
+          <input type="checkbox" id="text-draggable" checked>
+          <label for="text-draggable">Texte déplaçable</label>
+        </div>
+      </div>
+      
+      <!-- Contrôles de couleur -->
+      <span class="section-title">Colors</span>
+      
+      <div class="color-row">
+        <span class="color-label">Background</span>
+        <input type="color" id="bg-color" class="color-picker" value="#ffffff">
+      </div>
+      
+      <div class="color-row">
+        <span class="color-label">Particle</span>
+        <input type="color" id="particle-color" class="color-picker" value="#000000">
+      </div>
+      
+      <div class="control-group">
+        <label for="color-mode">Coloring Mode</label>
+        <select id="color-mode">
+          <option value="uniform">Uniform</option>
+          <option value="palette-random">Random from Palette</option>
+          <option value="velocity">Based on Velocity</option>
+        </select>
+      </div>
+      
+      <label>Color Palette</label>
+      <div id="color-palette" class="color-palette">
+        <!-- Palette colors will be added here dynamically -->
+        <div class="add-color" id="add-color">+</div>
+      </div>
+      
+      <!-- Randomization Controls -->
+      <span class="section-title">Randomization</span>
+      <button id="randomize-btn" class="randomize-btn">Randomize All</button>
+      
+      <div class="random-section">
+        <div class="random-control">
+          <input type="checkbox" id="size-random">
+          <label for="size-random">Random Size</label>
+        </div>
+        <div class="range-inputs">
+          <input type="number" id="size-min" value="1" min="0.5" max="10" step="0.5" disabled>
+          <input type="number" id="size-max" value="5" min="0.5" max="10" step="0.5" disabled>
+        </div>
+      </div>
+      
+      <div class="random-section">
+        <div class="random-control">
+          <input type="checkbox" id="damping-random">
+          <label for="damping-random">Random Damping</label>
+        </div>
+        <div class="range-inputs">
+          <input type="number" id="damping-min" value="0.8" min="0.5" max="0.99" step="0.01" disabled>
+          <input type="number" id="damping-max" value="0.99" min="0.5" max="0.99" step="0.01" disabled>
+        </div>
+      </div>
+      
+      <div class="random-section">
+        <div class="random-control">
+          <input type="checkbox" id="force-random">
+          <label for="force-random">Random Force</label>
+        </div>
+        <div class="range-inputs">
+          <input type="number" id="force-min" value="0.01" min="0.01" max="0.2" step="0.01" disabled>
+          <input type="number" id="force-max" value="0.1" min="0.01" max="0.2" step="0.01" disabled>
+        </div>
+      </div>
+      
+      <div class="random-section">
+        <div class="random-control">
+          <input type="checkbox" id="jitter-random">
+          <label for="jitter-random">Random Jitter</label>
+        </div>
+        <div class="range-inputs">
+          <input type="number" id="jitter-min" value="0" min="0" max="1" step="0.05" disabled>
+          <input type="number" id="jitter-max" value="0.5" min="0" max="1" step="0.05" disabled>
+        </div>
+      </div>
+    </div>
+    
+    <script>
+      // Script simplifié pour la bascule du panneau GUI
+      document.addEventListener('DOMContentLoaded', function() {
+        const toggleBtn = document.getElementById('toggle-gui');
+        const guiPanel = document.getElementById('gui-panel');
+        let isPanelVisible = true;
+        
+        // Fonction explicite pour masquer le panneau avec animation améliorée
+        function hidePanel() {
+          guiPanel.classList.add('hidden');
+          // Animation fluide du bouton
+          setTimeout(() => {
+            toggleBtn.style.right = '10px';
+            toggleBtn.textContent = '≫';
+          }, 50); // Petit délai pour synchroniser avec l'animation du panneau
+          isPanelVisible = false;
+          console.log('Panneau masqué');
+        }
+        
+        // Fonction explicite pour afficher le panneau avec animation améliorée
+        function showPanel() {
+          toggleBtn.style.right = '220px';
+          toggleBtn.textContent = '≡';
+          // Petit délai avant d'afficher le panneau pour permettre au bouton de se déplacer d'abord
+          setTimeout(() => {
+            guiPanel.classList.remove('hidden');
+          }, 50);
+          isPanelVisible = true;
+          console.log('Panneau affiché');
+        }
+        
+        // S'assurer que le panneau est visible au démarrage
+        showPanel();
+        
+        // Gestionnaire d'événements simple et direct
+        toggleBtn.addEventListener('click', function() {
+          // Ajout d'un effet de clic
+          toggleBtn.style.transform = 'scale(0.95)';
+          setTimeout(() => {
+            toggleBtn.style.transform = '';
+          }, 150);
+          
+          if (isPanelVisible) {
+            hidePanel();
+          } else {
+            showPanel();
+          }
+        });
+        
+        // Ajouter un raccourci clavier (touche Esc)
+        document.addEventListener('keydown', function(e) {
+          if (e.key === 'Escape') {
+            if (isPanelVisible) {
+              hidePanel();
+            } else {
+              showPanel();
+            }
+          }
+        });
+        
+        console.log('Contrôle du panneau initialisé avec succès');
+      });
+    </script>
+    <script type="module" src="/src/main.js"></script>
+  </body>
+</html>
