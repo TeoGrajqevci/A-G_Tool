@@ -263,9 +263,9 @@ function updateTextMask() {
   const currentText = textInput.value;
   const currentFontSize = parseInt(fontSizeInput.value);
   
-  // Initialize text position to center if not set yet
+  // Initialize text position to left side if not set yet
   if (textX === null) {
-    textX = textCanvas.width / 2;
+    textX = 20; // Position à 20px du bord gauche au lieu du centre
     textY = textCanvas.height / 2;
   }
   
@@ -273,7 +273,7 @@ function updateTextMask() {
   textCtx.clearRect(0, 0, textCanvas.width, textCanvas.height);
   // Set font and alignment
   textCtx.font = `${currentFontSize}px Inter`;
-  textCtx.textAlign = 'center';
+  textCtx.textAlign = 'left'; // Changé de 'center' à 'left'
   textCtx.textBaseline = 'middle';
   // Draw the text in black (the text is only used as a mask)
   textCtx.fillStyle = 'black';
